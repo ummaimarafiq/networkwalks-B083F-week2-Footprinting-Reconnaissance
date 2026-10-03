@@ -9,127 +9,129 @@
 
 ## 1. Executive Summary
 
-This report documents the footprinting and reconnaissance activities performed during Week 2 of my internship. The objective was to gather publicly available information about a target organization without directly interacting with its systems. This passive reconnaissance phase is critical for understanding a target's digital footprint and potential attack surface.
+This report documents the footprinting and reconnaissance activities performed during Week 2 of my internship. The objective was to gather publicly available information about a target organization without directly interacting with its systems.
 
-All activities were performed under the Networkwalks Letter of Authorization (NW-LOA-B083F-001). The scope was limited to `networkwalks.com` (owned by Networkwalks) and my own local network (LAN).
+All activities were performed under the Networkwalks Letter of Authorization (NW-LOA-B083F-001). The scope was limited to networkwalks.com (owned by Networkwalks) and my own local network.
 
-The assessment was successful. Key findings include the identification of the domain's registrar, hosting provider, web technologies (WordPress), the presence of a Web Application Firewall (ModSecurity), and a detailed DNS footprint. Local network scanning revealed live hosts and their MAC addresses.
-
----
-
-## 2. Introduction
-
-Reconnaissance is the first phase of ethical hacking. It involves collecting as much information as possible about a target using only public sources. This information is used to plan subsequent phases like scanning and exploitation. This report covers the practical application of several industry-standard tools to achieve this goal.
+Key findings include the domain registrar (GoDaddy), hosting provider (HostGator), web technologies (WordPress 7.1.2), Web Application Firewall (ModSecurity), and a detailed DNS footprint.
 
 ---
 
-## 3. Tools Used
+## 2. Tools Used
 
 | Tool | Purpose |
 |---|---|
-| **Kali Linux** | Primary OS for reconnaissance tools |
-| **WHOIS** | Domain registration and ownership details |
-| **WhatWeb** | Web technology fingerprinting |
-| **nslookup** | DNS resolution and IP discovery |
-| **curl -I** | HTTP header analysis |
-| **wafw00f** | Web Application Firewall detection |
-| **dnsrecon** | Full DNS record enumeration |
-| **Zenmap** | GUI for Nmap to scan local networks |
-| **theHarvester** | Email and subdomain harvesting |
-| **GHDB** | Google Hacking Database for dorking |
+| WHOIS | Domain registration details |
+| WhatWeb | Web technology fingerprinting |
+| nslookup | DNS resolution |
+| curl -I | HTTP header analysis |
+| wafw00f | WAF detection |
+| dnsrecon | DNS record enumeration |
+| Zenmap | Local network scanning |
+| theHarvester | Email and subdomain harvesting |
+| GHDB | Google Hacking Database dorks |
 
 ---
 
-## 4. Activities Performed
+## 3. Activities Performed
 
-### 4.1 Footprinting with Multiple Kali Tools (PM1)
+### 3.1 WHOIS – Domain Registration
 
-#### WHOIS – Domain Registration Details
 **Command:** `whois networkwalks.com`
-**Findings:** The domain is registered with GoDaddy. The name servers point to HostGator, indicating the hosting provider.
 
-![WHOIS Output](screenshots/01-whois.png)
+Result: Registrar GoDaddy, name servers on HostGator.
 
-#### WhatWeb – Web Technology Fingerprinting
+![WHOIS](01%20whois.png)
+
+### 3.2 WhatWeb – Technology Fingerprinting
+
 **Command:** `whatweb networkwalks.com`
-**Findings:** The site runs on WordPress 7.1.2 and uses the WP Download Manager plugin (version 3.3.58). This is valuable for identifying known vulnerabilities.
 
-![WhatWeb Output](screenshots/02-whatweb.png)
+Result: WordPress 7.1.2, WP Download Manager 3.3.58, Apache server, IP 192.232.216.135.
 
-#### nslookup – DNS Resolution
+![WhatWeb](02%20whatweb.png)
+
+### 3.3 nslookup – DNS Resolution
+
 **Command:** `nslookup networkwalks.com`
-**Findings:** The domain resolves to the IP address `192.232.216.135`.
 
-![nslookup Output](screenshots/03-nslookup.png)
+Result: Domain resolves to 192.232.216.135.
 
-#### curl -I – HTTP Response Headers
+![nslookup](03%20nslookup.png)
+
+### 3.4 curl -I – HTTP Headers
+
 **Command:** `curl -I https://networkwalks.com`
-**Findings:** The server is Apache. The HTTP 200 OK response confirms the site is live. The headers expose the WordPress REST API endpoint (`/wp-json/`).
 
-![curl Output](screenshots/04-curl.png)
+Result: HTTP/2 200, Apache server, WordPress REST API endpoint /wp-json/ exposed.
 
-#### wafw00f – WAF Detection
+![curl](04%20curl.png)
+
+### 3.5 wafw00f – WAF Detection
+
 **Command:** `wafw00f networkwalks.com`
-**Findings:** The site is protected by a Web Application Firewall: **ModSecurity (SpiderLabs)**. This is a crucial finding, as it indicates security controls are in place.
 
-![wafw00f Output](screenshots/05-wafw00f.png)
+Result: Site is behind ModSecurity (SpiderLabs) WAF.
 
-#### dnsrecon – DNS Enumeration
+![wafw00f](05%20wafw00f.png)
+
+### 3.6 dnsrecon – DNS Enumeration
+
 **Command:** `dnsrecon -d networkwalks.com`
-**Findings:** Enumerated NS, MX, TXT (SPF), and SRV records. Revealed the DNS software version (Bind 9.16.23) and cPanel mail discovery records.
 
-![dnsrecon Output](screenshots/06-dnsrecon.png)
+Result: NS, MX, TXT (SPF), SRV records enumerated. Bind 9.16.23.
 
-### 4.2 Google Hacking Database (GHDB) (PM2)
+![dnsrecon](06%20dnsrecon.png)
 
-**Objective:** Use Google dorks to find exposed devices and open directories.
+### 3.7 theHarvester – Email Harvesting
 
-**Dork 1:** `intitle:"webcamXP" inurl:8080`
-**Result:** Found several exposed webcam interfaces.
+**Command 1:** `theHarvester -d microsoft.com -l 1000 -b baidu`
 
-![GHDB Camera Dork](screenshots/12-ghdb-cam-dork.png)
+Result: 2 emails and 15 hosts found.
 
-**Dork 2:** `intitle:index.of "parent directory" mathematics pdf`
-**Result:** Found open directory listings containing mathematics PDF files.
+![theHarvester Baidu](07%20harvester%20baidu.png)
 
-![GHDB Math Dork](screenshots/14-ghdb-math-dork.png)
+**Command 2:** `theHarvester -d microsoft.com -l 50 -b all`
 
-*(A full table of 10 camera links and 10 math PDF listings is provided in the final report.)*
+Result: Additional sources queried (many required API keys).
 
-### 4.3 theHarvester – Email & Subdomain Harvesting (PM4)
+![theHarvester All](08%20harvester%20all.png)
 
-**Command 1 (Baidu):** `theHarvester -d microsoft.com -l 1000 -b baidu`
-**Findings:** Found 2 email addresses and 15 subdomains/hosts.
+### 3.8 Zenmap – Network Scanning
 
-![theHarvester Baidu](screenshots/07-harvester-baidu.png)
+**Step 1 – Local IP:** `ipconfig` → 192.168.100.8 / 255.255.255.0
 
-**Command 2 (All Sources):** `theHarvester -d microsoft.com -l 50 -b all`
-**Findings:** Aggregated results from multiple public sources. *(Many sources require API keys and returned errors, which is expected.)*
+![ipconfig](09%20ipconfig.png)
 
-![theHarvester All](screenshots/08-harvester-all.png)
+**Step 2 – Ping scan of 192.168.100.0/24**
 
-### 4.4 Network Scanning with Zenmap (PM5)
+Result: 2 live hosts:
+- 192.168.100.1 (Huawei router) – MAC: 3C:67:8C:4B:74:B0
+- 192.168.100.8 (my PC)
 
-**Objective:** Scan the local network to identify live hosts.
+![Zenmap Scan](10%20zenmap%20scan.png)
 
-**Step 1: Local IP Identification**
-**Command:** `ipconfig` (on Windows)
-**Findings:** Local IP is `192.168.100.8`, with a `/24` subnet mask.
+**Step 3 – Topology generated**
 
-![ipconfig](screenshots/09-ipconfig.png)
+![Zenmap Topology](11%20zenmap%20topology.png)
 
-**Step 2: Zenmap Ping Scan**
-**Target:** `192.168.100.0/24`
-**Findings:** Scan identified **2 live hosts**:
-- `192.168.100.1` (Huawei router) – MAC: `3C:67:8C:4B:74:B0`
-- `192.168.100.8` (my PC)
+### 3.9 GHDB – Google Hacking Database
 
-![Zenmap Scan](screenshots/10-zenmap-scan.png)
+**Camera dork:** `intitle:"webcamXP" inurl:8080`
 
-**Step 3: Topology Generation**
-Generated a network topology PDF and saved it to the desktop.
+![GHDB Camera Dork](12%20ghdb%20cam%20.png)
 
-![Zenmap Topology](screenshots/11-zenmap-topology.png)
+**Math PDF dork:** `intitle:index.of "parent directory" mathematics pdf`
+
+![GHDB Math Dork](13%20ghdb%20math%20dork.png)
+
+Open directory listing found: pegasso.zapto.org/DOCS-TECH/Math/
+
+---
+
+## 4. Maltego – Attempted, Blocked
+
+Maltego CE registration does not list Pakistan in the country dropdown. Only CaseFile (which does not support transforms) was accessible. This module will be revisited.
 
 ---
 
@@ -137,30 +139,28 @@ Generated a network topology PDF and saved it to the desktop.
 
 | Problem | Solution |
 |---|---|
-| **Maltego Country Block** | Maltego CE registration does not list Pakistan in its country dropdown. The tool could not be activated. This module was documented as incomplete. |
-| **theHarvester API Errors** | Many sources require API keys. TheHarvester returned `Missing API key` errors. Free sources (Baidu, DNS) still returned valid results. |
-| **Zenmap Missing Local Host** | Nmap does not show the scanning machine in its own ARP scan by design. This is expected behavior. |
+| Maltego country block | Country dropdown didn't include Pakistan. Documented as skipped. |
+| theHarvester API errors | Expected — many sources need paid API keys. Free sources still worked. |
+| Zenmap missing local host | Nmap doesn't show the scanning machine in its own ARP scan. |
 
 ---
 
 ## 6. Conclusion & Lessons Learned
 
-This week's practical exercises demonstrated the power of passive reconnaissance. Before any direct interaction, a significant amount of information about a target can be gathered. Key takeaways include:
-
-- **Technology Fingerprinting:** Identifying CMS and plugins is a direct path to finding known vulnerabilities.
-- **DNS Intelligence:** DNS records reveal critical infrastructure like mail servers and hosting providers.
-- **OSINT Power:** Tools like theHarvester aggregate public data to build a comprehensive target profile.
-- **Internal Visibility:** Local network scanning with Zenmap is essential for discovering unauthorized devices.
-- **Documentation:** Every finding must be documented with the exact command used and a screenshot for evidence.
-
-All activities were conducted ethically and within the authorized scope.
+- Passive reconnaissance reveals a huge amount of information without touching the target.
+- Web technology fingerprinting leads directly to known vulnerability databases.
+- DNS records expose hosting providers and mail servers.
+- Google dorks turn search engines into powerful recon tools.
+- theHarvester aggregates dozens of public sources into one profile.
+- Local network scanning reveals unauthorized devices.
+- Every command and output must be documented for a proper security report.
 
 ---
 
-## 7. Evidence & Screenshots
+## 7. Evidence
 
-All screenshots are stored in the `screenshots/` folder of this repository.
+All screenshots are in the root of this repository.
 
 ---
 
-*This report was prepared for the Networkwalks Cybersecurity Internship (Batch B083F).*
+*Prepared for the Networkwalks Cybersecurity Internship (Batch B083F).*
